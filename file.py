@@ -19,7 +19,9 @@ def help():
 
 def delete(data):
     if len(args) < 3:
-        print("Fill ids to be deleted like: python file.py 'id1' 'id2' ... ")
+        print("Fill ids to be deleted like: python file.py delete 'id1' 'id2' ... ")
+        return
+    
     del_id_list = args[2:]
     
     changed_data = copy.deepcopy(data)
@@ -35,35 +37,88 @@ def delete(data):
 def list(data):
     if len(data['tasks']) == 0:
         print('no tasks in the list')
-    else:
+        return
+    
+    if len(args) == 2:
         print('id', 'name')             
         for i in data['tasks'].keys():
-            print(i, data['tasks'][i]['name'])
+            if data['tasks'][i]['status'] == 'to_do':
+                print(i,
+                    data['tasks'][i]['name'],
+                    data['tasks'][i]['status']
+                    )
+                return data
     
+    option = args[2]
+
+    if option == '-all':
+        print('id', 'name', 'status')             
+        for i in data['tasks'].keys():
+            print(i,
+                data['tasks'][i]['name'],
+                data['tasks'][i]['status']
+                )
+            
+    elif option == '-created':
+        print('id', 'name', 'status')             
+        for i in data['tasks'].keys():
+            if data['tasks'][i]['status'] == 'created':
+                print(i,
+                    data['tasks'][i]['name'],
+                    data['tasks'][i]['status']
+                    )
+
     return data
 
 def create(data):
     if len(args) != 3:
-        print("Fill name like: python file.py 'name'")
-        
-    else:
-        task_name = args[2]
-        
-        changed_data = copy.deepcopy(data)
-        
-        id_task = str(uuid.uuid4())
-        
-        changed_data['tasks'][id_task] = {
-            'name': task_name
-            }
-        
-        return changed_data
+        print("Fill name like: python file.py create 'name'")
+        return
+
+    task_name = args[2]
+    
+    changed_data = copy.deepcopy(data)
+    
+    id_task = str(uuid.uuid4())
+    
+    changed_data['tasks'][id_task] = {
+        'name': task_name,
+        'status': 'to_do'
+        }
+    
+    return changed_data
+
+def change_status(data):
+    if len(args) != 4:
+        print("Fill new status like: python file.py status 'task_id' 'complited'")
+        return
+    
+    changed_data = copy.deepcopy(data)
+    
+    task_id = args[3]
+    
+    print(changed_data['task'].keys())
+    
+    if task_id not in changed_data['task'].keys():
+        print(f"Task id: {task_id} does not exist")
+
+    new_status = args[4]
+    
+    if new_status not in ('complited', 'to_do'):
+        print(f"Available statuses: complited, to_do")
+    
+    print(changed_data['tasks'][task_id][new_status])
+    
+    return changed_data
+    
+    
 
 available_commands = {
         'create': create,
         'list': list,
         'delete': delete,
         'help': help,
+        'change_status': change_status
         }
 
 def main():
@@ -82,13 +137,13 @@ def main():
         
     command = args[1]
     command_runner = available_commands.get(command)
+    
     if not command_runner or command == 'help':
         help()
     else:
-        changed_data = command_runner(data)
-        
+        changed_data = command_runner(data) 
+    if changed_data != data:
         save_file(changed_data)
-
 
 
 main()
