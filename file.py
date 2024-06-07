@@ -47,7 +47,7 @@ def list(data):
                     data['tasks'][i]['name'],
                     data['tasks'][i]['status']
                     )
-                return data
+        return data
     
     option = args[2]
 
@@ -95,19 +95,19 @@ def change_status(data):
     
     changed_data = copy.deepcopy(data)
     
-    task_id = args[3]
+    task_id = args[2]
     
-    print(changed_data['task'].keys())
+    print(changed_data['tasks'].keys())
     
-    if task_id not in changed_data['task'].keys():
+    if task_id not in changed_data['tasks'].keys():
         print(f"Task id: {task_id} does not exist")
 
-    new_status = args[4]
+    new_status = args[3]
     
     if new_status not in ('complited', 'to_do'):
         print(f"Available statuses: complited, to_do")
     
-    print(changed_data['tasks'][task_id][new_status])
+    changed_data['tasks'][task_id]['status'] = new_status
     
     return changed_data
     
@@ -141,7 +141,8 @@ def main():
     if not command_runner or command == 'help':
         help()
     else:
-        changed_data = command_runner(data) 
+        changed_data = command_runner(data)
+    
     if changed_data != data:
         save_file(changed_data)
 
