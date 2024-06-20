@@ -32,12 +32,13 @@ def save_json(data, json_path):
 
 def delete(del_id_list):
     data = get_storage()
+    changed_data = copy.deepcopy(data)
     
     deleted_ids = []
     
     for del_task_id in del_id_list:
-        if del_task_id in data['tasks'].keys():
-            del data['tasks'][del_task_id]
+        if del_task_id in changed_data['tasks'].keys():
+            del changed_data['tasks'][del_task_id]
             deleted_ids.append(del_task_id)
         else:
             print(f"Task id: {del_task_id} does not exist")
@@ -45,8 +46,7 @@ def delete(del_id_list):
     if len(deleted_ids) > 0:
         print(f"Tasks with ids # {deleted_ids} deleted")
     
-    save_file(data)
-
+    save_file(changed_data)
 
 def list(filter):
     data = get_storage()
@@ -63,8 +63,7 @@ def list(filter):
 
     filter_to_status = {'completed': TASK_STATUS['done'],
                         'uncompleted': TASK_STATUS['new']}
-    
-           
+
     for task in data['tasks'].keys():
         if data['tasks'][task]['status'] == filter_to_status[filter]:
             result.append(data['tasks'][task])
@@ -75,27 +74,28 @@ def list(filter):
 
 
 def create(name):
-    
     data = get_storage()
-    
-    task_name = name
 
     changed_data = copy.deepcopy(data)
 
     id_task = str(uuid.uuid4())
 
     changed_data['tasks'][id_task] = {
-        'name': task_name,
+        'name': name,
         'status': TASK_STATUS['new'],
         'id': id_task
         }
     
     save_file(changed_data)
-
+    
+    out = {'status': 'ok',
+           'description': f"Task id # {id_task} created",
+           'data': changed_data['tasks'][id_task]}
+    return out
 
 def change_status(task_id, new_status):
-
     data = get_storage()
+    
     changed_data = copy.deepcopy(data)
     
     if task_id not in changed_data['tasks'].keys():
@@ -141,6 +141,3 @@ def main():
     
     if changed_data != data:
         save_file(changed_data)
-
-
-# main()
