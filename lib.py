@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 import json
 import uuid
@@ -27,47 +25,53 @@ def get_storage():
     except:
         create_file()
         return open_file()
-
-
-def help(): 
-    print('This is task manager')
-    print('Available commands:')
-    for i in available_commands.keys():
-        print(i)
+    
+def save_json(data, json_path):
+    with open(json_path, 'w') as file:
+        json.dump(data, file)
 
 def delete(del_id_list):
-
     data = get_storage()
+    
+    deleted_ids = []
+    
     for del_task_id in del_id_list:
         if del_task_id in data['tasks'].keys():
             del data['tasks'][del_task_id]
+            deleted_ids.append(del_task_id)
         else:
             print(f"Task id: {del_task_id} does not exist")
+            
+    if len(deleted_ids) > 0:
+        print(f"Tasks with ids # {deleted_ids} deleted")
     
     save_file(data)
-    return data
-
 
 
 def list(filter):
     data = get_storage()
     
     result = []
+    length_name = 0
     
     if filter == 'all':
-        for i in data['tasks'].keys():
-            result.append(data['tasks'])
-        return result
+        for task in data['tasks'].keys():
+            result.append(data['tasks'][task])
+            if length_name < len(data['tasks'][task]['name']):
+                length_name = len(data['tasks'][task]['name'])
+        return result, length_name
 
     filter_to_status = {'completed': TASK_STATUS['done'],
                         'uncompleted': TASK_STATUS['new']}
     
            
-    for i in data['tasks'].keys():
-        if data['tasks'][i]['status'] == filter_to_status[filter]:
-            result.append(data['tasks'][i])
-            
-    return result
+    for task in data['tasks'].keys():
+        if data['tasks'][task]['status'] == filter_to_status[filter]:
+            result.append(data['tasks'][task])
+            if length_name < len(data['tasks'][task]['name']):
+                length_name = len(data['tasks'][task]['name'])
+    
+    return result, length_name
 
 
 def create(name):
@@ -87,30 +91,22 @@ def create(name):
         }
     
     save_file(changed_data)
-    
-    return changed_data
 
 
-def change_status(task_id):
+def change_status(task_id, new_status):
 
     data = get_storage()
     changed_data = copy.deepcopy(data)
     
     if task_id not in changed_data['tasks'].keys():
         print(f"Task id: {task_id} does not exist")
-        return data
+        return
 
-    new_status = args[3]
-    
-    if new_status not in (TASK_STATUS['new'], TASK_STATUS['done']):
-        print(f"Available statuses: completed, to_do")
-        return data
-    
     changed_data['tasks'][task_id]['status'] = new_status
     
-    save_file(changed_data)
+    print(f"Task with id # {task_id} change status on '{new_status}'")
     
-    return changed_data
+    save_file(changed_data)
 
 
 available_commands = {
